@@ -153,12 +153,24 @@ class Session(LibrespotSession):
     ) -> PlayableContentFeeder.LoadedStream:
         if quality.value is None:
             quality = Quality.VERY_HIGH if self.is_premium() else Quality.HIGH
-        return self.content_feeder().load(
-            playable_id,
-            VorbisOnlyAudioQuality(quality.value),
-            False,
-            None,
-        )
+            
+        max_retries = 12
+        retry_count = 0
+        
+        while retry_count < max_retries + 1: # Could be replaced with while True if you wanted it to retry forever.
+            try:
+                return self.content_feeder().load(
+                    playable_id,
+                    VorbisOnlyAudioQuality(quality.value),
+                    False,
+                    None,
+                )
+            except Exception as e:
+                retry_count += 1
+                if retry_count == max_retries:
+                    raise e
+                print(f"Error: {e}, retrying in {5*retry_count} seconds... (Attempt {retry_count}/{max_retries})")
+                sleep(5*retry_count)
 
     def get_track(self, track_id: str, quality: Quality = Quality.AUTO) -> Track:
         """
