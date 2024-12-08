@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from time import sleep
+
 from enum import IntEnum
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
