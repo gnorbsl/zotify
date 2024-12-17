@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from time import sleep
+import random
 
 from enum import IntEnum
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -156,10 +157,10 @@ class Session(LibrespotSession):
         if quality.value is None:
             quality = Quality.VERY_HIGH if self.is_premium() else Quality.HIGH
             
-        max_retries = 12
         retry_count = 0
+        base_delay = 1  # Base delay of 1 second
         
-        while retry_count < max_retries + 1: # Could be replaced with while True if you wanted it to retry forever.
+        while True:
             try:
                 return self.content_feeder().load(
                     playable_id,
@@ -169,10 +170,10 @@ class Session(LibrespotSession):
                 )
             except Exception as e:
                 retry_count += 1
-                if retry_count == max_retries:
-                    raise e
-                print(f"Error: {e}, retrying in {5*retry_count} seconds... (Attempt {retry_count}/{max_retries})")
-                sleep(5*retry_count)
+                # Calculate exponential delay with a small random jitter
+                delay = (base_delay * (2 ** (retry_count - 1))) * (0.8 + 0.4 * random.random())
+                print(f"Error: {e}, retrying in {delay:.1f} seconds... (Attempt {retry_count})")
+                sleep(delay)
 
     def get_track(self, track_id: str, quality: Quality = Quality.AUTO) -> Track:
         """
