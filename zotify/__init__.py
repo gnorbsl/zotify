@@ -159,6 +159,7 @@ class Session(LibrespotSession):
             
         retry_count = 0
         base_delay = 1  # Base delay of 1 second
+        max_delay = 30  # Maximum delay of 30 seconds (before jitter)
         
         while True:
             try:
@@ -171,7 +172,8 @@ class Session(LibrespotSession):
             except Exception as e:
                 retry_count += 1
                 # Calculate exponential delay with a small random jitter
-                delay = (base_delay * (2 ** (retry_count - 1))) * (0.8 + 0.4 * random.random())
+                delay = min(base_delay * (2 ** (retry_count - 1)), max_delay)
+                delay = delay * (0.8 + 0.4 * random.random())  # Add jitter
                 print(f"Error: {e}, retrying in {delay:.1f} seconds... (Attempt {retry_count})")
                 sleep(delay)
 
